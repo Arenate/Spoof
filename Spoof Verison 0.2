@@ -1,0 +1,48 @@
+local replicated = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local NetworkClient = game:GetService("NetworkClient")
+local player = Players.LocalPlayer
+
+local network = NetworkClient:FindFirstChild("ClientReplicator")
+
+local spoof = Instance.new("Configuration")
+spoof.Name = "Spoof"
+spoof.Parent = network or NetworkClient
+
+local Spoof = {}
+Spoof.__index = Spoof
+
+Spoof.Table = {}
+
+function Spoof.SendBytes(amount)
+    if typeof(amount) ~= "number" or amount < 1 then return end
+    for _, obj in ipairs(replicated:GetDescendants()) do
+        if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
+            for i = 1, amount do
+                table.insert(Spoof.Table, {})
+            end
+        end
+    end
+end
+
+local RemoteMeta = {}
+RemoteMeta.__index = RemoteMeta
+
+function RemoteMeta:Amount(value)
+    if typeof(value) ~= "number" or value < 1 then return end
+    for i = 1, value do
+        table.insert(Spoof.Table, {})
+    end
+    return self
+end
+
+function Spoof.Get(remote)
+    if not remote or not (remote:IsA("RemoteEvent") or remote:IsA("RemoteFunction")) then return nil end
+    if not Spoof.Table[remote] then
+        Spoof.Table[remote] = setmetatable({}, RemoteMeta)
+    end
+    return Spoof.Table[remote]
+end
+
+getgenv().Spoof = Spoof
+print("Spoofex Functions Loaded")
