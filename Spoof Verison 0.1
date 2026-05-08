@@ -1,0 +1,43 @@
+local replicated = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local NetworkClient = game:GetService("NetworkClient")
+local player = Players.LocalPlayer
+
+local network = NetworkClient:FindFirstChild("ClientReplicator")
+local spoof = Instance.new("Configuration")
+spoof.Name = "Spoof"
+if network then
+    spoof.Parent = network
+else
+    spoof.Parent = NetworkClient
+end
+
+local Spoof = {}
+Spoof.__index = Spoof
+
+function Spoof.SendBytes(amount)
+    if typeof(amount) ~= "number" then return end
+    for _, obj in ipairs(replicated:GetDescendants()) do
+        if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
+            for i = 1, amount do
+                table.insert({}, i)
+            end
+        end
+    end
+end
+
+function Spoof.FireAll(amount)
+    if typeof(amount) ~= "number" then return end
+    for _, obj in ipairs(replicated:GetDescendants()) do
+        if obj:IsA("RemoteEvent") then
+            for i = 1, amount do
+                pcall(function()
+                    obj:FireServer({})
+                end)
+            end
+        end
+    end
+end
+
+getgenv().Spoof = Spoof
+print("Spoofex Functions Loaded")
